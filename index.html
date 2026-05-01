@@ -238,9 +238,9 @@ input[type=range]::-webkit-slider-thumb:hover { transform: scale(1.28); }
   .wave-grid { grid-template-columns: repeat(4, 1fr); gap: 12px; }
 }
 
-/* Large tablet */
+/* Large tablet / desktop — 5 cols = 2 clean rows of 5 */
 @media (min-width: 860px) {
-  .wave-grid { grid-template-columns: repeat(7, 1fr); gap: 12px; }
+  .wave-grid { grid-template-columns: repeat(5, 1fr); gap: 12px; }
 }
 
 /* ── Mobile tweaks (≤ 600px) ─────────────────────────────────── */
@@ -306,7 +306,7 @@ input[type=range]::-webkit-slider-thumb:hover { transform: scale(1.28); }
 
 <header>
   <h1>LIFE WAVE</h1>
-  <p>Your composite rhythm — shaped by seven forces</p>
+  <p>Your composite rhythm — shaped by ten forces</p>
 </header>
 
 <div class="life-panel" id="lifePanel">
@@ -353,9 +353,12 @@ const CFG = [
   { name:'Connected to people', icon:'🤝', color:'#fb923c', freq:0.97 },
   { name:'Hobbies',              icon:'⚽', color:'#facc15', freq:1.14 },
   { name:'Lifestyle habits',    icon:'🌱', color:'#2dd4bf', freq:0.86 },
+  { name:'New experiences',     icon:'✨', color:'#818cf8', freq:1.06 },
+  { name:'New skills',          icon:'🧠', color:'#4ade80', freq:0.94 },
+  { name:'New challenges',      icon:'🎯', color:'#fb7185', freq:1.16 },
 ];
 
-const amps    = new Array(CFG.length).fill(0);
+const amps = new Array(CFG.length).fill(0);
 const miniCtx = [];
 let lifeCanvas, lifeCtx, isDark = true, t = 0;
 
@@ -611,16 +614,4 @@ function drawLife(time) {
   }
 }
 
-/* ── Loop ────────────────────────────────────────────────────── */
-function loop(ts) {
-  t = ts / 1000;
-  CFG.forEach((cfg, i) => drawMini(miniCtx[i], cfg, amps[i], t));
-  drawLife(t);
-  requestAnimationFrame(loop);
-}
-
-buildUI();
-requestAnimationFrame(loop);
-</script>
-</body>
-</html>
+/* ── Loop ────────────────────────
