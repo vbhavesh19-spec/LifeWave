@@ -215,6 +215,14 @@ input[type=range]::-webkit-slider-thumb:hover { transform: scale(1.28); }
   color: var(--text-muted); letter-spacing: .06em; text-align: center;
 }
 
+/* ── Top quote ───────────────────────────────────────────────── */
+.quote-top { margin-bottom: -4px; }
+.quote-top .q-text {
+  font-size: 1.15rem; font-weight: 700;
+  letter-spacing: .03em;
+}
+.quote-top .q-mark { font-size: 3rem; }
+
 /* ── Bottom quote ────────────────────────────────────────────── */
 .quote-bottom {
   justify-content: center;
@@ -308,6 +316,13 @@ input[type=range]::-webkit-slider-thumb:hover { transform: scale(1.28); }
   <h1>LIFE WAVE</h1>
   <p>Your composite rhythm — shaped by ten forces</p>
 </header>
+
+<div class="quote-wrap quote-top">
+  <div class="q-mark">"</div>
+  <div>
+    <div class="q-text">Inputs over outputs ❤️</div>
+  </div>
+</div>
 
 <div class="life-panel" id="lifePanel">
   <div class="life-top">
@@ -614,4 +629,16 @@ function drawLife(time) {
   }
 }
 
-/* ── Loop ────────────────────────
+/* ── Loop ────────────────────────────────────────────────────── */
+function loop(ts) {
+  t = ts / 1000;
+  CFG.forEach((cfg, i) => drawMini(miniCtx[i], cfg, amps[i], t));
+  drawLife(t);
+  requestAnimationFrame(loop);
+}
+
+buildUI();
+requestAnimationFrame(loop);
+</script>
+</body>
+</html>
