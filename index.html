@@ -156,8 +156,8 @@ header p {
 
 /* ── Wave grid ───────────────────────────────────────────────── */
 .wave-grid {
-  display: grid; grid-template-columns: repeat(7, 1fr);
-  gap: 12px; width: 100%; max-width: 1120px;
+  display: grid; grid-template-columns: repeat(2, 1fr);
+  gap: 10px; width: 100%; max-width: 1120px;
 }
 .wave-card {
   background: var(--panel-bg);
@@ -214,6 +214,88 @@ input[type=range]::-webkit-slider-thumb:hover { transform: scale(1.28); }
   font-size: .75rem; font-weight: 500;
   color: var(--text-muted); letter-spacing: .06em; text-align: center;
 }
+
+/* ── Bottom quote ────────────────────────────────────────────── */
+.quote-bottom {
+  justify-content: center;
+  opacity: .6;
+  border-top: 1px solid var(--panel-border);
+  padding-top: 20px;
+  margin-top: 4px;
+}
+.quote-bottom .q-text { font-size: .88rem; }
+.quote-bottom .q-mark { font-size: 2.6rem; }
+
+/* ── Responsive ──────────────────────────────────────────────── */
+
+/* Small tablet / large phone landscape */
+@media (min-width: 480px) {
+  .wave-grid { grid-template-columns: repeat(3, 1fr); gap: 11px; }
+}
+
+/* Tablet */
+@media (min-width: 680px) {
+  .wave-grid { grid-template-columns: repeat(4, 1fr); gap: 12px; }
+}
+
+/* Large tablet */
+@media (min-width: 860px) {
+  .wave-grid { grid-template-columns: repeat(7, 1fr); gap: 12px; }
+}
+
+/* ── Mobile tweaks (≤ 600px) ─────────────────────────────────── */
+@media (max-width: 600px) {
+  body { padding: 14px 12px 40px; gap: 14px; }
+
+  .top-bar { margin-bottom: -4px; }
+  .toggle-btn { font-size: .7rem; padding: 5px 14px; }
+
+  header h1 { font-size: 1.8rem; letter-spacing: .08em; }
+  header p  { font-size: .72rem; letter-spacing: .06em; }
+
+  .life-panel { padding: 14px 12px 12px; border-radius: 14px; }
+  .life-top   { margin-bottom: 8px; }
+  .life-label-text { font-size: .68rem; letter-spacing: .1em; }
+  .score-pill { font-size: .9rem; padding: 4px 12px; }
+  #lifeCanvas { height: 140px; }
+
+  /* Stack state row on mobile */
+  .state-row {
+    flex-direction: column; align-items: flex-start; gap: 6px;
+    margin-top: 8px;
+  }
+  .state-badge { font-size: .78rem; letter-spacing: .1em; }
+  /* Collapse axis labels into one line */
+  .axis-labels {
+    flex-direction: row; gap: 10px;
+    font-size: .6rem; letter-spacing: .05em;
+  }
+
+  .quote-wrap { gap: 8px; }
+  .q-mark  { font-size: 2.6rem; }
+  .q-text  { font-size: .88rem; }
+  .q-attr  { font-size: .65rem; }
+
+  .wave-card { padding: 10px 8px 11px; gap: 6px; border-radius: 12px; }
+  .wave-icon { font-size: 1.25rem; }
+  .wave-name { font-size: .65rem; letter-spacing: .07em; }
+  canvas.mini { height: 54px; }
+
+  .slider-ends { font-size: .58rem; }
+  .amp-label   { font-size: .64rem; }
+  input[type=range] { height: 4px; }
+  input[type=range]::-webkit-slider-thumb { width: 20px; height: 20px; }
+
+  .hint { font-size: .68rem; }
+}
+
+/* ── Very small phones (≤ 360px) ─────────────────────────────── */
+@media (max-width: 360px) {
+  header h1 { font-size: 1.5rem; }
+  .score-pill { font-size: .8rem; padding: 3px 10px; }
+  .axis-labels { display: none; }
+  .wave-name { font-size: .58rem; }
+}
 </style>
 </head>
 <body>
@@ -253,6 +335,14 @@ input[type=range]::-webkit-slider-thumb:hover { transform: scale(1.28); }
 <div class="wave-grid" id="waveGrid"></div>
 
 <p class="hint">Drag sliders to Crest (thriving) or Trough (rebuilding) — your Life Wave responds</p>
+
+<div class="quote-wrap quote-bottom">
+  <div class="q-mark">"</div>
+  <div>
+    <div class="q-text">Insanity is doing the same thing again and again and expecting different outcomes.</div>
+    <div class="q-attr">— Albert Einstein</div>
+  </div>
+</div>
 
 <script>
 const CFG = [
@@ -349,9 +439,19 @@ function buildUI() {
   });
 
   lifeCanvas = document.getElementById('lifeCanvas');
-  lifeCanvas.width = 1120; lifeCanvas.height = 175;
   lifeCtx = lifeCanvas.getContext('2d');
+  resizeLifeCanvas();
 }
+
+function resizeLifeCanvas() {
+  if (!lifeCanvas) return;
+  const w = lifeCanvas.parentElement.clientWidth - 24;
+  const h = Math.round(Math.min(175, Math.max(130, w * 0.16)));
+  lifeCanvas.width  = Math.max(300, w);
+  lifeCanvas.height = h;
+  lifeCanvas.style.height = h + 'px';
+}
+window.addEventListener('resize', resizeLifeCanvas);
 
 /* ── Mini wave ───────────────────────────────────────────────── */
 function drawMini(ctx, cfg, amp, time) {
@@ -488,12 +588,13 @@ function drawLife(time) {
       if (y < cY) { cY = y; cX = x; }
       if (y > tY) { tY = y; tX = x; }
     });
+    const fs = Math.round(Math.max(9, W * 0.011));
     [[cX, cY, c1, '▲ CREST', -14], [tX, tY, c2, '▼ TROUGH', 18]].forEach(([px, py, col, lbl, off]) => {
-      lifeCtx.beginPath(); lifeCtx.arc(px, py, 5, 0, Math.PI * 2);
+      lifeCtx.beginPath(); lifeCtx.arc(px, py, Math.max(4, W * 0.004), 0, Math.PI * 2);
       lifeCtx.fillStyle = col;
       lifeCtx.shadowColor = col; lifeCtx.shadowBlur = 14 * glow();
       lifeCtx.fill(); lifeCtx.shadowBlur = 0;
-      lifeCtx.font = '700 11px Segoe UI';
+      lifeCtx.font = `700 ${fs}px Segoe UI`;
       lifeCtx.fillStyle = col;
       lifeCtx.textAlign = 'center';
       lifeCtx.fillText(lbl, px, py + off);
@@ -502,10 +603,11 @@ function drawLife(time) {
 
   /* Equilibrium label */
   if (Math.abs(avgScore) > 0.15) {
-    lifeCtx.font = '600 10px Segoe UI';
+    const eqFs = Math.round(Math.max(8, W * 0.010));
+    lifeCtx.font = `600 ${eqFs}px Segoe UI`;
     lifeCtx.fillStyle = isDark ? 'rgba(255,255,255,.22)' : 'rgba(0,0,0,.22)';
     lifeCtx.textAlign = 'left';
-    lifeCtx.fillText('equilibrium', 8, cy - 5);
+    lifeCtx.fillText('equilibrium', 6, cy - 4);
   }
 }
 
