@@ -1,0 +1,524 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Life Wave</title>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+/* ── Theme tokens ────────────────────────────────────────────── */
+:root {
+  --bg-a:         #05050e;
+  --bg-b:         #0c0c24;
+  --panel-bg:     rgba(255,255,255,.032);
+  --panel-border: rgba(255,255,255,.10);
+  --text:         #f1f5f9;
+  --text-dim:     #94a3b8;
+  --text-muted:   #64748b;
+  --track-bg:     #1e293b;
+  --canvas-bg:    rgba(0,0,0,.32);
+  --badge-bg:     rgba(255,255,255,.07);
+  --toggle-bg:    #1e293b;
+  --quote-color:  #94a3b8;
+  --quote-mark:   #4338ca;
+}
+[data-theme="light"] {
+  --bg-a:         #f5f3ff;
+  --bg-b:         #e9e3ff;
+  --panel-bg:     rgba(255,255,255,.88);
+  --panel-border: rgba(100,70,200,.18);
+  --text:         #1e1b4b;
+  --text-dim:     #374151;
+  --text-muted:   #4b5563;
+  --track-bg:     #ddd6fe;
+  --canvas-bg:    rgba(238,233,255,.60);
+  --badge-bg:     rgba(0,0,0,.05);
+  --toggle-bg:    #ddd6fe;
+  --quote-color:  #4c1d95;
+  --quote-mark:   #7c3aed;
+}
+
+/* ── Layout ──────────────────────────────────────────────────── */
+body {
+  background: linear-gradient(160deg, var(--bg-a) 0%, var(--bg-b) 100%);
+  min-height: 100vh;
+  font-family: 'Segoe UI', Tahoma, sans-serif;
+  color: var(--text);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 26px 22px 50px;
+  gap: 20px;
+  transition: background .4s, color .4s;
+}
+
+/* ── Top bar ─────────────────────────────────────────────────── */
+.top-bar {
+  width: 100%; max-width: 1120px;
+  display: flex; justify-content: flex-end;
+  margin-bottom: -8px;
+}
+.toggle-btn {
+  background: var(--toggle-bg);
+  border: 1px solid var(--panel-border);
+  color: var(--text-dim);
+  font-size: .78rem; font-weight: 600;
+  letter-spacing: .1em; text-transform: uppercase;
+  padding: 6px 18px; border-radius: 20px;
+  cursor: pointer; transition: all .25s;
+}
+.toggle-btn:hover { opacity: .75; }
+
+/* ── Header ──────────────────────────────────────────────────── */
+header { text-align: center; }
+header h1 {
+  font-size: 2.6rem; font-weight: 800; letter-spacing: .14em;
+  background: linear-gradient(100deg, #60a5fa, #c084fc, #f472b6);
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+header p {
+  margin-top: 6px; font-size: .88rem; font-weight: 500;
+  letter-spacing: .1em; text-transform: uppercase;
+  color: var(--text-dim);
+}
+
+/* ── Life panel ──────────────────────────────────────────────── */
+.life-panel {
+  width: 100%; max-width: 1120px;
+  background: var(--panel-bg);
+  border: 1px solid var(--panel-border);
+  border-radius: 18px; padding: 18px 20px 14px;
+  transition: box-shadow .5s, background .4s, border-color .4s;
+  backdrop-filter: blur(6px);
+}
+.life-panel.surge   { box-shadow: 0 0 52px #00e5a01e; }
+.life-panel.dipping { box-shadow: 0 0 52px #ef44441e; }
+
+.life-top {
+  display: flex; justify-content: space-between;
+  align-items: center; margin-bottom: 10px;
+}
+.life-label-text {
+  font-size: .8rem; font-weight: 700;
+  text-transform: uppercase; letter-spacing: .16em;
+  color: var(--text-dim);
+}
+.score-pill {
+  font-size: 1.05rem; font-weight: 700;
+  padding: 5px 18px; border-radius: 20px;
+  background: var(--badge-bg);
+  border: 1px solid var(--panel-border);
+  letter-spacing: .04em;
+  transition: color .4s, border-color .4s;
+}
+#lifeCanvas {
+  display: block; width: 100%; height: 175px;
+  border-radius: 10px; background: var(--canvas-bg);
+}
+.state-row {
+  display: flex; justify-content: space-between;
+  align-items: center; margin-top: 10px; padding: 0 2px;
+}
+.state-badge {
+  font-size: .9rem; font-weight: 700;
+  letter-spacing: .14em; text-transform: uppercase;
+  transition: color .4s; color: var(--text-dim);
+}
+.axis-labels {
+  display: flex; gap: 18px;
+  font-size: .72rem; font-weight: 600;
+  letter-spacing: .08em; text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+/* ── Quote ───────────────────────────────────────────────────── */
+.quote-wrap {
+  width: 100%; max-width: 1120px;
+  display: flex; align-items: flex-start; gap: 12px; padding: 2px 0;
+}
+.q-mark {
+  font-size: 3.4rem; line-height: .8;
+  color: var(--quote-mark); font-family: Georgia, serif;
+  flex-shrink: 0; transition: color .4s;
+}
+.q-text {
+  font-size: 1rem; font-style: italic; font-weight: 500;
+  color: var(--quote-color); letter-spacing: .02em;
+  line-height: 1.55; transition: color .4s;
+}
+.q-attr {
+  font-size: .72rem; font-weight: 600;
+  letter-spacing: .14em; text-transform: uppercase;
+  color: var(--text-muted); margin-top: 3px;
+}
+
+/* ── Wave grid ───────────────────────────────────────────────── */
+.wave-grid {
+  display: grid; grid-template-columns: repeat(7, 1fr);
+  gap: 12px; width: 100%; max-width: 1120px;
+}
+.wave-card {
+  background: var(--panel-bg);
+  border: 1px solid var(--panel-border);
+  border-radius: 14px; padding: 11px 9px 12px;
+  display: flex; flex-direction: column;
+  align-items: center; gap: 7px;
+  transition: border-color .3s, box-shadow .3s, background .4s;
+  backdrop-filter: blur(6px);
+}
+
+/* ── Wave icon & name ────────────────────────────────────────── */
+.wave-icon { font-size: 1.4rem; line-height: 1; }
+.wave-name {
+  font-size: .72rem; font-weight: 700;
+  text-transform: uppercase; letter-spacing: .1em;
+  text-align: center; width: 100%;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+
+/* ── Mini canvas ─────────────────────────────────────────────── */
+canvas.mini {
+  display: block; width: 100%; height: 64px;
+  border-radius: 6px; background: var(--canvas-bg);
+}
+
+/* ── Slider ──────────────────────────────────────────────────── */
+.slider-wrap { width: 100%; display: flex; flex-direction: column; gap: 5px; }
+.slider-ends {
+  display: flex; justify-content: space-between;
+  font-size: .65rem; font-weight: 700;
+  text-transform: uppercase; letter-spacing: .07em;
+  color: var(--text-muted);
+}
+input[type=range] {
+  -webkit-appearance: none; appearance: none;
+  width: 100%; height: 5px; border-radius: 3px;
+  outline: none; cursor: pointer;
+}
+input[type=range]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 18px; height: 18px; border-radius: 50%;
+  cursor: pointer; border: 2px solid var(--bg-a);
+  transition: transform .15s;
+}
+input[type=range]::-webkit-slider-thumb:hover { transform: scale(1.28); }
+.amp-label {
+  text-align: center; font-size: .72rem; font-weight: 700;
+  letter-spacing: .06em; text-transform: uppercase;
+  transition: color .25s; color: var(--text-muted);
+}
+
+.hint {
+  font-size: .75rem; font-weight: 500;
+  color: var(--text-muted); letter-spacing: .06em; text-align: center;
+}
+</style>
+</head>
+<body>
+
+<div class="top-bar">
+  <button class="toggle-btn" id="themeBtn">☀ Light Mode</button>
+</div>
+
+<header>
+  <h1>LIFE WAVE</h1>
+  <p>Your composite rhythm — shaped by seven forces</p>
+</header>
+
+<div class="life-panel" id="lifePanel">
+  <div class="life-top">
+    <span class="life-label-text">Composite Life Wave</span>
+    <span class="score-pill" id="scorePill">0.0 / 7</span>
+  </div>
+  <canvas id="lifeCanvas"></canvas>
+  <div class="state-row">
+    <span class="state-badge" id="stateBadge">〰 Balanced</span>
+    <div class="axis-labels">
+      <span>▲ Crest = thriving</span>
+      <span>▼ Trough = rebuilding</span>
+    </div>
+  </div>
+</div>
+
+<div class="quote-wrap">
+  <div class="q-mark">"</div>
+  <div>
+    <div class="q-text">This too shall pass — each moment as it comes.</div>
+    <div class="q-attr">— Dr. Strange</div>
+  </div>
+</div>
+
+<div class="wave-grid" id="waveGrid"></div>
+
+<p class="hint">Drag sliders to Crest (thriving) or Trough (rebuilding) — your Life Wave responds</p>
+
+<script>
+const CFG = [
+  { name:'Fitness',             icon:'💪', color:'#00e5a0', freq:1.00 },
+  { name:'Relationship',        icon:'❤️',  color:'#f472b6', freq:1.10 },
+  { name:'Soul at ease',        icon:'🌬️', color:'#c084fc', freq:0.92 },
+  { name:'Connected to work',   icon:'💼', color:'#38bdf8', freq:1.05 },
+  { name:'Connected to people', icon:'🤝', color:'#fb923c', freq:0.97 },
+  { name:'Hobbies',              icon:'⚽', color:'#facc15', freq:1.14 },
+  { name:'Lifestyle habits',    icon:'🌱', color:'#2dd4bf', freq:0.86 },
+];
+
+const amps    = new Array(CFG.length).fill(0);
+const miniCtx = [];
+let lifeCanvas, lifeCtx, isDark = true, t = 0;
+
+/* ── Theme ───────────────────────────────────────────────────── */
+document.getElementById('themeBtn').addEventListener('click', () => {
+  isDark = !isDark;
+  document.documentElement.dataset.theme = isDark ? 'dark' : 'light';
+  document.getElementById('themeBtn').textContent = isDark ? '☀ Light Mode' : '🌙 Dark Mode';
+});
+const glow = () => isDark ? 1 : 0;
+
+/* ── Build UI ────────────────────────────────────────────────── */
+function buildUI() {
+  const grid = document.getElementById('waveGrid');
+
+  CFG.forEach((cfg, i) => {
+    const card = document.createElement('div');
+    card.className = 'wave-card';
+    card.id = `card-${i}`;
+
+    const iconEl = document.createElement('div');
+    iconEl.className = 'wave-icon';
+    iconEl.textContent = cfg.icon;
+
+    const nameEl = document.createElement('div');
+    nameEl.className = 'wave-name';
+    nameEl.textContent = cfg.name;
+    nameEl.style.color = cfg.color;
+
+    /* ── Mini canvas ─────────────────────────────────────────── */
+    const cv = document.createElement('canvas');
+    cv.className = 'mini';
+    cv.width = 200; cv.height = 64;
+    miniCtx.push(cv.getContext('2d'));
+
+    /* ── Slider ──────────────────────────────────────────────── */
+    const wrap = document.createElement('div');
+    wrap.className = 'slider-wrap';
+    wrap.innerHTML = `<div class="slider-ends"><span>Trough</span><span>Crest</span></div>`;
+
+    const slider = document.createElement('input');
+    slider.type = 'range';
+    slider.min = -100; slider.max = 100; slider.value = 0; slider.step = 1;
+    slider.id = `sl-${i}`;
+
+    const st = document.createElement('style');
+    st.textContent = `#sl-${i}::-webkit-slider-thumb{background:${cfg.color};box-shadow:0 0 10px ${cfg.color}88;}`;
+    document.head.appendChild(st);
+
+    const ampLabel = document.createElement('div');
+    ampLabel.className = 'amp-label';
+    ampLabel.textContent = 'Neutral';
+    ampLabel.style.color = 'var(--text-muted)';
+
+    const updateTrack = v => {
+      const pct = (v + 100) / 200 * 100;
+      slider.style.background =
+        `linear-gradient(to right,${cfg.color}55 0%,${cfg.color} ${pct}%,var(--track-bg) ${pct}%)`;
+    };
+    updateTrack(0);
+
+    slider.addEventListener('input', () => {
+      const v = +slider.value;
+      amps[i] = v / 100;
+      updateTrack(v);
+      const strong = Math.abs(v) > 25;
+      ampLabel.textContent = v > 25 ? 'Crest ▲' : v < -25 ? 'Trough ▼' : 'Neutral';
+      ampLabel.style.color = strong ? cfg.color : 'var(--text-muted)';
+      card.style.borderColor = strong ? cfg.color + '55' : '';
+      card.style.boxShadow = (strong && isDark) ? `0 0 18px ${cfg.color}22` : '';
+    });
+
+    wrap.appendChild(slider);
+    wrap.appendChild(ampLabel);
+
+    card.appendChild(iconEl);
+    card.appendChild(nameEl);
+    card.appendChild(cv);
+    card.appendChild(wrap);
+    grid.appendChild(card);
+  });
+
+  lifeCanvas = document.getElementById('lifeCanvas');
+  lifeCanvas.width = 1120; lifeCanvas.height = 175;
+  lifeCtx = lifeCanvas.getContext('2d');
+}
+
+/* ── Mini wave ───────────────────────────────────────────────── */
+function drawMini(ctx, cfg, amp, time) {
+  const W = ctx.canvas.width, H = ctx.canvas.height;
+  const maxA = H * 0.30;
+  const dc = amp * H * 0.20;
+  const cy = H / 2 - dc;
+  const waveAmp = Math.abs(amp) * maxA;
+
+  ctx.clearRect(0, 0, W, H);
+
+  ctx.strokeStyle = isDark ? 'rgba(255,255,255,.07)' : 'rgba(0,0,0,.07)';
+  ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.moveTo(0, H/2); ctx.lineTo(W, H/2); ctx.stroke();
+
+  if (Math.abs(amp) < 0.015) {
+    ctx.strokeStyle = cfg.color + '35'; ctx.lineWidth = 1.5;
+    ctx.beginPath(); ctx.moveTo(0, H/2); ctx.lineTo(W, H/2); ctx.stroke();
+    return;
+  }
+
+  const pts = [];
+  for (let x = 0; x <= W; x++) {
+    const phase = (x / W) * Math.PI * 2 * cfg.freq * 2 + time * 0.7;
+    pts.push(cy - waveAmp * Math.sin(phase));
+  }
+
+  const fillGrad = ctx.createLinearGradient(0, cy - waveAmp, 0, cy + waveAmp);
+  fillGrad.addColorStop(0, cfg.color + (amp > 0 ? '44' : '22'));
+  fillGrad.addColorStop(1, 'transparent');
+  ctx.beginPath();
+  pts.forEach((y, x) => x === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y));
+  ctx.lineTo(W, H/2); ctx.lineTo(0, H/2); ctx.closePath();
+  ctx.fillStyle = fillGrad; ctx.fill();
+
+  ctx.shadowColor = cfg.color; ctx.shadowBlur = 12 * glow();
+  ctx.strokeStyle = cfg.color; ctx.lineWidth = 2;
+  ctx.beginPath();
+  pts.forEach((y, x) => x === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y));
+  ctx.stroke();
+  ctx.shadowBlur = 0;
+}
+
+/* ── Life wave ───────────────────────────────────────────────── */
+const STATES = [
+  [ .55, '⚡ SURGING',      '#00e5a0', '#38bdf8', 'surge'  ],
+  [ .20, '🌊 RIDING HIGH',  '#a3e635', '#34d399', 'surge'  ],
+  [-.20, '〰  BALANCED',    '#94a3b8', '#64748b', ''       ],
+  [-.55, '📉 DIPPING',      '#fb923c', '#f472b6', 'dipping'],
+  [-Infinity,'🌑 REBUILDING','#ef4444','#c084fc', 'dipping'],
+];
+function stateFor(s) {
+  for (const [thr, ...rest] of STATES) if (s > thr) return rest;
+}
+
+function drawLife(time) {
+  const W = lifeCanvas.width, H = lifeCanvas.height, cy = H / 2;
+  const maxA = H * 0.34;
+  lifeCtx.clearRect(0, 0, W, H);
+
+  const N = CFG.length;
+  const avgScore  = amps.reduce((s, a) => s + a, 0) / N;
+  const avgEnergy = amps.reduce((s, a) => s + Math.abs(a), 0) / N;
+
+  const baseline = cy - avgScore * H * 0.30;
+  const waveAmp  = avgEnergy * maxA * 0.82;
+  const speed    = 0.35 + avgEnergy * 0.55;
+
+  const pts = [];
+  for (let x = 0; x <= W; x++) {
+    let sum = 0, totalW = 0;
+    CFG.forEach((cfg, i) => {
+      const phase = (x / W) * Math.PI * 2 * cfg.freq * 1.6 + time * speed;
+      sum    += amps[i] * Math.sin(phase);
+      totalW += Math.abs(amps[i]);
+    });
+    pts.push(baseline - (totalW > 0 ? sum / totalW : 0) * waveAmp);
+  }
+
+  const [label, c1, c2, panelCls] = stateFor(avgScore);
+
+  document.getElementById('scorePill').textContent =
+    (avgScore >= 0 ? '+' : '') + (avgScore * N).toFixed(1) + ' / ' + N;
+  document.getElementById('scorePill').style.color = c1;
+  document.getElementById('scorePill').style.borderColor = c1 + '44';
+  document.getElementById('stateBadge').textContent = label;
+  document.getElementById('stateBadge').style.color = c1;
+  document.getElementById('lifePanel').className = 'life-panel' + (panelCls ? ' ' + panelCls : '');
+
+  /* Equilibrium line */
+  lifeCtx.setLineDash([6, 8]);
+  lifeCtx.strokeStyle = isDark ? 'rgba(255,255,255,.10)' : 'rgba(0,0,0,.10)';
+  lifeCtx.lineWidth = 1;
+  lifeCtx.beginPath(); lifeCtx.moveTo(0, cy); lifeCtx.lineTo(W, cy); lifeCtx.stroke();
+  lifeCtx.setLineDash([]);
+
+  if (avgEnergy < 0.012) {
+    lifeCtx.strokeStyle = isDark ? '#ffffff18' : '#00000014';
+    lifeCtx.lineWidth = 2;
+    lifeCtx.beginPath(); lifeCtx.moveTo(0, cy); lifeCtx.lineTo(W, cy); lifeCtx.stroke();
+    return;
+  }
+
+  /* Fill above */
+  const gradUp = lifeCtx.createLinearGradient(0, cy - maxA, 0, cy);
+  gradUp.addColorStop(0, c1 + '48'); gradUp.addColorStop(1, 'transparent');
+  lifeCtx.beginPath();
+  pts.forEach((y, x) => x === 0 ? lifeCtx.moveTo(x, y) : lifeCtx.lineTo(x, y));
+  lifeCtx.lineTo(W, cy); lifeCtx.lineTo(0, cy); lifeCtx.closePath();
+  lifeCtx.fillStyle = gradUp; lifeCtx.fill();
+
+  /* Fill below */
+  const gradDn = lifeCtx.createLinearGradient(0, cy, 0, cy + maxA);
+  gradDn.addColorStop(0, 'transparent'); gradDn.addColorStop(1, c2 + '2a');
+  lifeCtx.beginPath();
+  pts.forEach((y, x) => x === 0 ? lifeCtx.moveTo(x, y) : lifeCtx.lineTo(x, y));
+  lifeCtx.lineTo(W, cy); lifeCtx.lineTo(0, cy); lifeCtx.closePath();
+  lifeCtx.fillStyle = gradDn; lifeCtx.fill();
+
+  /* Glowing stroke */
+  const lg = lifeCtx.createLinearGradient(0, 0, W, 0);
+  lg.addColorStop(0, c1); lg.addColorStop(0.5, c2); lg.addColorStop(1, c1);
+  lifeCtx.shadowColor = c1; lifeCtx.shadowBlur = 24 * glow();
+  lifeCtx.strokeStyle = lg; lifeCtx.lineWidth = 3.5; lifeCtx.lineJoin = 'round';
+  lifeCtx.beginPath();
+  pts.forEach((y, x) => x === 0 ? lifeCtx.moveTo(x, y) : lifeCtx.lineTo(x, y));
+  lifeCtx.stroke();
+  lifeCtx.shadowBlur = 0;
+
+  /* Crest / Trough markers */
+  if (avgEnergy > 0.1) {
+    let cY = Infinity, tY = -Infinity, cX = 0, tX = 0;
+    pts.forEach((y, x) => {
+      if (y < cY) { cY = y; cX = x; }
+      if (y > tY) { tY = y; tX = x; }
+    });
+    [[cX, cY, c1, '▲ CREST', -14], [tX, tY, c2, '▼ TROUGH', 18]].forEach(([px, py, col, lbl, off]) => {
+      lifeCtx.beginPath(); lifeCtx.arc(px, py, 5, 0, Math.PI * 2);
+      lifeCtx.fillStyle = col;
+      lifeCtx.shadowColor = col; lifeCtx.shadowBlur = 14 * glow();
+      lifeCtx.fill(); lifeCtx.shadowBlur = 0;
+      lifeCtx.font = '700 11px Segoe UI';
+      lifeCtx.fillStyle = col;
+      lifeCtx.textAlign = 'center';
+      lifeCtx.fillText(lbl, px, py + off);
+    });
+  }
+
+  /* Equilibrium label */
+  if (Math.abs(avgScore) > 0.15) {
+    lifeCtx.font = '600 10px Segoe UI';
+    lifeCtx.fillStyle = isDark ? 'rgba(255,255,255,.22)' : 'rgba(0,0,0,.22)';
+    lifeCtx.textAlign = 'left';
+    lifeCtx.fillText('equilibrium', 8, cy - 5);
+  }
+}
+
+/* ── Loop ────────────────────────────────────────────────────── */
+function loop(ts) {
+  t = ts / 1000;
+  CFG.forEach((cfg, i) => drawMini(miniCtx[i], cfg, amps[i], t));
+  drawLife(t);
+  requestAnimationFrame(loop);
+}
+
+buildUI();
+requestAnimationFrame(loop);
+</script>
+</body>
+</html>
