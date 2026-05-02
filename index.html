@@ -314,7 +314,7 @@ input[type=range]::-webkit-slider-thumb:hover { transform: scale(1.28); }
 
 <header>
   <h1>LIFE WAVE</h1>
-  <p>Your composite rhythm — shaped by ten forces</p>
+  <p>Your composite rhythm — shaped by twelve forces</p>
 </header>
 
 <div class="quote-wrap quote-top">
@@ -371,6 +371,8 @@ const CFG = [
   { name:'New experiences',     icon:'✨', color:'#818cf8', freq:1.06 },
   { name:'New skills',          icon:'🧠', color:'#4ade80', freq:0.94 },
   { name:'New challenges',      icon:'🎯', color:'#fb7185', freq:1.16 },
+  { name:'Bakchodi',            icon:'😂', color:'#e879f9', freq:1.03 },
+  { name:'Presence',            icon:'🕯️', color:'#fde68a', freq:0.89 },
 ];
 
 const amps = new Array(CFG.length).fill(0);
@@ -632,13 +634,4 @@ function drawLife(time) {
 /* ── Loop ────────────────────────────────────────────────────── */
 function loop(ts) {
   t = ts / 1000;
-  CFG.forEach((cfg, i) => drawMini(miniCtx[i], cfg, amps[i], t));
-  drawLife(t);
-  requestAnimationFrame(loop);
-}
-
-buildUI();
-requestAnimationFrame(loop);
-</script>
-</body>
-</html>
+  CFG.forEach((cfg, i) => drawM
