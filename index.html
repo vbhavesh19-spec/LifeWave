@@ -634,4 +634,13 @@ function drawLife(time) {
 /* ── Loop ────────────────────────────────────────────────────── */
 function loop(ts) {
   t = ts / 1000;
-  CFG.forEach((cfg, i) => drawM
+  CFG.forEach((cfg, i) => drawMini(miniCtx[i], cfg, amps[i], t));
+  drawLife(t);
+  requestAnimationFrame(loop);
+}
+
+buildUI();
+requestAnimationFrame(loop);
+</script>
+</body>
+</html>
